@@ -27,7 +27,6 @@
           top: e.pageY + 10,
           left: e.pageX + 10
         }).fadeIn();
-
         e.preventDefault();
       });
 
