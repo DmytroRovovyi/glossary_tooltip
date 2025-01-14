@@ -1,0 +1,79 @@
+<?php
+
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\node\Entity\Node;
+use Drupal\taxonomy\TermInterface;
+
+/**
+ * Implements hook_entity_view().
+ */
+function glossary_tooltip_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+
+  // Attach your custom library to add CSS/JS.
+  $build['#attached']['library'][] = 'glossary_tooltip/glossary_tooltip_styles';
+  $build['#attached']['library'][] = 'glossary_tooltip/glossary_tooltip_popup';
+}
+
+/**
+ * Implements hook_node_presave().
+ */
+function glossary_tooltip_node_presave(Node $node) {
+
+  // Only process nodes with a body field.
+  if (!$node->hasField('body')) {
+    return;
+  }
+
+  // Retrieving content.
+  $body = $node->get('body')->value;
+
+  // Getting terms from the Glossary.
+  $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree('glossary');
+
+  foreach ($terms as $term) {
+    $term_name = $term->name;
+
+    // Load the full term entity to access the description field.
+    $full_term = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->load($term->tid);
+
+    // Check if the term has a description.
+    if (!empty($full_term->getDescription())) {
+
+      // Skip if the specific term already has 'data-term-id'.
+      $pattern = '/<a[^>]*data-term-id="' . $term->tid . '"[^>]*>/i';
+      if (preg_match($pattern, $body)) {
+        continue;
+      }
+      $plain_description = strip_tags($full_term->getDescription());
+
+      // Replace term title in content with a link containing a popup.
+      $term_link = '<a href="#" class="glossary-tooltip" data-description="' . $plain_description . '" data-term-id="' . $term->tid . '">' . $term->name . '</a>';
+      $body = str_replace($term->name, $term_link, $body);
+    }
+    else {
+
+      // Skip if the specific term already has 'class="glossary-term"'.
+      $pattern = '/<span[^>]*class="glossary-term"[^>]*title="' . $term_name . '"[^>]*>/i';
+      if (preg_match($pattern, $body)) {
+        continue;
+      }
+
+      // Check if the term exists in the body content.
+      if (strpos($body, $term_name) !== FALSE) {
+
+        // Create the tooltip HTML with the short description.
+        $tooltip = '<span class="glossary-term" title="' . $term_name . '">' . $term_name . '</span>';
+
+        $body = str_replace($term_name, $tooltip, $body);
+      }
+    }
+  }
+
+  // Update field body.
+  $node->set('body', [
+    'value' => $body,
+    'format' => 'full_html',
+  ]);
+}

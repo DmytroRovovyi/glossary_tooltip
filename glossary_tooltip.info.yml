@@ -1,0 +1,7 @@
+name: Glossary Tooltip
+description: Highlights words from the glossary vocabulary and adds tooltips with descriptions.
+type: module
+core_version_requirement: ^8 || ^9
+package: Custom
+dependencies:
+  - taxonomy:taxonomy

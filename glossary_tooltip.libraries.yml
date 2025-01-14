@@ -1,0 +1,11 @@
+glossary_tooltip_styles:
+  version: 1.x
+  css:
+    theme:
+      css/glossary_tooltip.css: {}
+glossary_tooltip_popup:
+  js:
+    js/glossary_tooltip.js: {}
+  dependencies:
+      - core/jquery
+      - core/drupal
