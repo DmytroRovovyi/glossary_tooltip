@@ -89,7 +89,5 @@ function glossary_tooltip_preprocess_node(array &$variables) {
     $variables['#cache']['tags'] = Cache::mergeTags($variables['#cache']['tags'], ['taxonomy_term:' . $tid]);
   }
   $variables['#cache']['tags'] = Cache::mergeTags($variables['#cache']['tags'], ['taxonomy_term_list:glossary']);
-
-  // Clear the cache after updating the content.
-  Cache::invalidateTags(['node:' . $node->id()]);
+  $variables['elements']['#cache']['tags'] = Cache::mergeTags($variables['elements']['#cache']['tags'], ['node:' . $node->id()]);
 }
