@@ -53,7 +53,7 @@ function glossary_tooltip_preprocess_node(array &$variables) {
       }
 
       // Escape special HTML characters in the description.
-      $plain_description = strip_tags($full_term->getDescription());
+      $plain_description = addslashes(strip_tags($full_term->getDescription()));
 
       // Replace term title in content with a link containing a popup.
       $term_link = '<a href="#" class="glossary-tooltip" data-description="' . $plain_description . '" data-term-id="' . $term->tid . '">' . $term->name . '</a>';
@@ -80,9 +80,13 @@ function glossary_tooltip_preprocess_node(array &$variables) {
   $variables['content']['body'][0]['#text'] = $body;
   $variables['content']['body'][0]['#format'] = 'full_html';
 
+  if (!isset($variables['#cache']['tags'])) {
+    $variables['#cache']['tags'] = [];
+  }
+
   // Add the taxonomy term cache tags.
   foreach ($term_tids as $tid) {
-    $variables['#cache']['tags'][] = 'taxonomy_term:' . $tid;
+    $variables['#cache']['tags'] = Cache::mergeTags($variables['#cache']['tags'], ['taxonomy_term:' . $tid]);
   }
 
   // Clear the cache after updating the content.
