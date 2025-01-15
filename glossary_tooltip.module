@@ -88,18 +88,8 @@ function glossary_tooltip_preprocess_node(array &$variables) {
   foreach ($term_tids as $tid) {
     $variables['#cache']['tags'] = Cache::mergeTags($variables['#cache']['tags'], ['taxonomy_term:' . $tid]);
   }
+  $variables['#cache']['tags'] = Cache::mergeTags($variables['#cache']['tags'], ['taxonomy_term_list:glossary']);
 
   // Clear the cache after updating the content.
   Cache::invalidateTags(['node:' . $node->id()]);
 }
-
-/**
- * Implements hook_taxonomy_term_insert().
- * Clears the cache for nodes when a new taxonomy term is created.
- */
-function glossary_tooltip_taxonomy_term_insert(TermInterface $term) {
-  if ($term->bundle() === 'glossary') {
-    Cache::invalidateTags(['rendered', 'node']);
-  }
-}
-
