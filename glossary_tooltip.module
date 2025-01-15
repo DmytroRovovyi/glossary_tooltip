@@ -3,6 +3,7 @@
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\taxonomy\TermInterface;
 
 /**
  * Implements hook_entity_view().
@@ -33,11 +34,15 @@ function glossary_tooltip_preprocess_node(array &$variables) {
   // Getting terms from the Glossary.
   $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree('glossary');
 
+  $term_tids = [];
   foreach ($terms as $term) {
     $term_name = $term->name;
 
     // Load the full term entity to access the description field.
     $full_term = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->load($term->tid);
+
+    // Add term tid to the list of term ids.
+    $term_tids[] = $term->tid;
 
     // Check if the term has a description.
     if (!empty($full_term->getDescription())) {
@@ -78,6 +83,23 @@ function glossary_tooltip_preprocess_node(array &$variables) {
   $variables['content']['body'][0]['#text'] = $body;
   $variables['content']['body'][0]['#format'] = 'full_html';
 
+  // Add the taxonomy term cache tags.
+  foreach ($term_tids as $tid) {
+    $variables['#cache']['tags'][] = 'taxonomy_term:' . $tid;
+  }
+
   // Clear the cache after updating the content.
   Cache::invalidateTags(['node:' . $node->id()]);
 }
+
+/**
+ * Implements hook_taxonomy_term_insert().
+ * Clears the cache for nodes when a new taxonomy term is created.
+ */
+function glossary_tooltip_taxonomy_term_insert(TermInterface $term) {
+
+  if ($term->bundle() === 'glossary') {
+    Cache::invalidateTags(['rendered', 'node']);
+  }
+}
+
