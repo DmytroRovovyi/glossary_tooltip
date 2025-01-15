@@ -9,18 +9,18 @@ use Drupal\taxonomy\TermInterface;
  * Implements hook_entity_view().
  */
 function glossary_tooltip_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($entity->getEntityTypeId() === 'node') {
 
-  // Attach your custom library to add CSS/JS.
-  $build['#attached']['library'][] = 'glossary_tooltip/glossary_tooltip_styles';
-  $build['#attached']['library'][] = 'glossary_tooltip/glossary_tooltip_popup';
+    // Attach your custom library to add CSS/JS.
+    $build['#attached']['library'][] = 'glossary_tooltip/glossary_tooltip_styles';
+    $build['#attached']['library'][] = 'glossary_tooltip/glossary_tooltip_popup';
+  }
 }
 
 /**
  * Implements hook_preprocess_node().
  */
 function glossary_tooltip_preprocess_node(array &$variables) {
-
-  // Ensure we are dealing with a node.
   $node = $variables['node'];
 
   // Only process nodes with a body field.
@@ -33,7 +33,6 @@ function glossary_tooltip_preprocess_node(array &$variables) {
 
   // Getting terms from the Glossary.
   $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree('glossary');
-
   $term_tids = [];
   foreach ($terms as $term) {
     $term_name = $term->name;
@@ -61,7 +60,6 @@ function glossary_tooltip_preprocess_node(array &$variables) {
       $body = str_replace($term->name, $term_link, $body);
     }
     else {
-
       // Skip if the specific term already has 'class="glossary-term"'.
       $pattern = '/<span[^>]*class="glossary-term"[^>]*title="' . $term_name . '"[^>]*>/i';
       if (preg_match($pattern, $body)) {
@@ -73,7 +71,6 @@ function glossary_tooltip_preprocess_node(array &$variables) {
 
         // Create the tooltip HTML with the short description.
         $tooltip = '<span class="glossary-term" title="' . $term_name . '">' . $term_name . '</span>';
-
         $body = str_replace($term->name, $tooltip, $body);
       }
     }
@@ -97,7 +94,6 @@ function glossary_tooltip_preprocess_node(array &$variables) {
  * Clears the cache for nodes when a new taxonomy term is created.
  */
 function glossary_tooltip_taxonomy_term_insert(TermInterface $term) {
-
   if ($term->bundle() === 'glossary') {
     Cache::invalidateTags(['rendered', 'node']);
   }
