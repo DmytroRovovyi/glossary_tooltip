@@ -5,8 +5,7 @@
 
         // Get term values.
         var description = $(this).data('description');
-        var termId = $(this).data('term-id');
-        var termUrl = '/taxonomy/term/' + termId;
+        var termUrl = $(this).data('term-url');
 
         // Description limit to 100 characters.
         var truncatedDescription = description.length > 100 ? description.substring(0, 100) + '...' : description;

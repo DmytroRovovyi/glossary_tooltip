@@ -3,7 +3,6 @@
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\taxonomy\TermInterface;
 
 /**
  * Implements hook_entity_view().
@@ -34,6 +33,10 @@ function glossary_tooltip_preprocess_node(array &$variables) {
   // Getting terms from the Glossary.
   $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree('glossary');
   $term_tids = [];
+
+  // Get the base term URL pattern.
+  $base_term_url = \Drupal::service('router.route_provider')->getRouteByName('entity.taxonomy_term.canonical')->getPath();
+
   foreach ($terms as $term) {
     $term_name = $term->name;
 
@@ -46,8 +49,12 @@ function glossary_tooltip_preprocess_node(array &$variables) {
     // Check if the term has a description.
     if (!empty($full_term->getDescription())) {
 
+      // Replace {taxonomy_term} in the base URL with the actual term ID.
+      $termUrl = str_replace('{taxonomy_term}', $term->tid, $base_term_url);
+      $escaped_term_url = preg_quote($termUrl, '/');
+
       // Skip if the specific term already has 'data-term-id'.
-      $pattern = '/<a[^>]*data-term-id="' . $term->tid . '"[^>]*>/i';
+      $pattern = '/<a[^>]*data-term-url="' . $escaped_term_url . '"[^>]*>/i';
       if (preg_match($pattern, $body)) {
         continue;
       }
@@ -55,11 +62,12 @@ function glossary_tooltip_preprocess_node(array &$variables) {
       // Escape special HTML characters in the description.
       $plain_description = addslashes(strip_tags($full_term->getDescription()));
 
-      // Replace term title in content with a link containing a popup.
-      $term_link = '<a href="#" class="glossary-tooltip" data-description="' . $plain_description . '" data-term-id="' . $term->tid . '">' . $term->name . '</a>';
+      // Add data-term-url as a custom attribute.
+      $term_link = '<a href="#" class="glossary-tooltip" data-description="' . $plain_description . '" data-term-url="' . $termUrl . '">' . $term->name . '</a>';
       $body = str_replace($term->name, $term_link, $body);
     }
     else {
+
       // Skip if the specific term already has 'class="glossary-term"'.
       $pattern = '/<span[^>]*class="glossary-term"[^>]*title="' . $term_name . '"[^>]*>/i';
       if (preg_match($pattern, $body)) {
@@ -68,8 +76,6 @@ function glossary_tooltip_preprocess_node(array &$variables) {
 
       // Check if the term exists in the body content.
       if (strpos($body, $term_name) !== FALSE) {
-
-        // Create the tooltip HTML with the short description.
         $tooltip = '<span class="glossary-term" title="' . $term_name . '">' . $term_name . '</span>';
         $body = str_replace($term->name, $tooltip, $body);
       }
@@ -84,10 +90,11 @@ function glossary_tooltip_preprocess_node(array &$variables) {
     $variables['#cache']['tags'] = [];
   }
 
-  // Add the taxonomy term cache tags.
+  // Add the cache tags.
   foreach ($term_tids as $tid) {
     $variables['#cache']['tags'] = Cache::mergeTags($variables['#cache']['tags'], ['taxonomy_term:' . $tid]);
   }
   $variables['#cache']['tags'] = Cache::mergeTags($variables['#cache']['tags'], ['taxonomy_term_list:glossary']);
   $variables['elements']['#cache']['tags'] = Cache::mergeTags($variables['elements']['#cache']['tags'], ['node:' . $node->id()]);
 }
+
