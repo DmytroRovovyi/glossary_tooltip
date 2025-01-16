@@ -1,13 +1,12 @@
 (function ($, Drupal) {
   Drupal.behaviors.glossaryTooltip = {
     attach: function (context, settings) {
-      $('.glossary-tooltip', context).once('glossaryTooltip').click(function (e) {
+      $('.glossary-tooltip', context).click(function (e) {
 
         // Get term values.
         var description = $(this).data('description');
         var termUrl = $(this).data('term-url');
-        var basePath = drupalSettings.glossaryTooltip ? drupalSettings.glossaryTooltip.basePath : '/';
-        var arrowImagePath = basePath + 'modules/custom/glossary_tooltip/svg/arrow-icon.svg';
+        var arrowImagePath = drupalSettings.path.baseUrl + 'modules/custom/glossary_tooltip/svg/arrow-icon.svg';
 
         // Description limit to 100 characters.
         var truncatedDescription = description.length > 100 ? description.substring(0, 100) + '...' : description;
