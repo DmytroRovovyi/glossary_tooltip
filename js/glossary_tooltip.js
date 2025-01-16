@@ -6,6 +6,8 @@
         // Get term values.
         var description = $(this).data('description');
         var termUrl = $(this).data('term-url');
+        var basePath = drupalSettings.glossaryTooltip ? drupalSettings.glossaryTooltip.basePath : '/';
+        var arrowImagePath = basePath + 'modules/custom/glossary_tooltip/svg/arrow-icon.svg';
 
         // Description limit to 100 characters.
         var truncatedDescription = description.length > 100 ? description.substring(0, 100) + '...' : description;
@@ -13,7 +15,7 @@
         // add "Read more".
         if (description.length > 100) {
           truncatedDescription += '<br><a href="' + termUrl + '" class="read-more-glossary" target="_blank">Read more ' +
-            '<img src="/modules/custom/glossary_tooltip/svg/arrow-icon.svg" alt="arrow" width="13" height="13">' +
+            '<img src="' + arrowImagePath + '" alt="arrow" width="13" height="13">' +
             '</a>';
         }
 
